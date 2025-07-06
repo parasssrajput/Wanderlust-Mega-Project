@@ -123,21 +123,21 @@ sudo apt-get install jenkins -y
   - <b>Create EKS Cluster (Master machine)</b>
   ```bash
   eksctl create cluster --name=wanderlust \
-                      --region=us-east-2 \
+                      --region=ap-south-1 \
                       --version=1.30 \
                       --without-nodegroup
   ```
   - <b>Associate IAM OIDC Provider (Master machine)</b>
   ```bash
   eksctl utils associate-iam-oidc-provider \
-    --region us-east-2 \
+    --region ap-south-1 \
     --cluster wanderlust \
     --approve
   ```
   - <b>Create Nodegroup (Master machine)</b>
   ```bash
   eksctl create nodegroup --cluster=wanderlust \
-                       --region=us-east-2 \
+                       --region=ap-south-1 \
                        --name=wanderlust \
                        --node-type=t2.large \
                        --nodes=2 \
@@ -199,9 +199,27 @@ sudo apt-get install jenkins -y
 - <b id="docker">Install docker (Jenkins Worker)</b>
 
 ```bash
-sudo apt install docker.io -y
-sudo usermod -aG docker ubuntu && newgrp docker
+sudo yum install docker
+sudo usermod -aG docker ec2-user && newgrp docker
 ```
+# 
+- <b id="docker-compose">Install docker-compose (Jenkins Worker)</b>
+# 1. Download the latest Docker Compose binary
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+
+# 2. Make the binary executable
+sudo chmod +x /usr/local/bin/docker-compose
+
+# 3. (Optional but recommended) Create a symlink so you can run docker-compose from anywhere
+sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+
+# 4. Verify the installation
+docker-compose version
+
+
+
+
+
 #
 - <b id="Sonar">Install and configure SonarQube (Master machine)</b>
 ```bash
@@ -210,11 +228,9 @@ docker run -itd --name SonarQube-Server -p 9000:9000 sonarqube:lts-community
 #
 - <b id="Trivy">Install Trivy (Jenkins Worker)</b>
 ```bash
-sudo apt-get install wget apt-transport-https gnupg lsb-release -y
-wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
-echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
-sudo apt-get update -y
-sudo apt-get install trivy -y
+curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh -s -- -b /usr/local/bin v0.64.1
+trivy --version
+
 ```
 #
 - <b id="Argo">Install and Configure ArgoCD (Master Machine)</b>
@@ -522,7 +538,7 @@ kubectl get secret --namespace prometheus stable-grafana -o jsonpath="{.data.adm
 ## Clean Up
 - <b id="Clean">Delete eks cluster</b>
 ```bash
-eksctl delete cluster --name=wanderlust --region=us-west-1
+eksctl delete cluster --name=wanderlust --region=ap-south-1
 ```
 
 #
